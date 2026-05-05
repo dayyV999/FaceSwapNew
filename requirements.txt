@@ -1,0 +1,7 @@
+flask
+flask-cors
+insightface
+onnxruntime
+opencv-python
+numpy
+# Optional: install onnxruntime-gpu only if you have a compatible CUDA GPU
