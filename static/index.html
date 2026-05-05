@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Swap Studios</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+--bg: #0a0a0f;
+--surface: #12121a;
+--surface2: #1a1a26;
+--border: #2a2a3d;
+--accent: #7c5cfc;
+--accent2: #fc5c7d;
+--text: #f0eeff;
+--muted: #6b6b8a;
+--success: #5cfca0;
+--error: #fc5c5c;
+}
+
+body {
+background: var(--bg);
+color: var(--text);
+font-family: 'DM Mono', monospace;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+body::before {
+content: '';
+position: fixed;
+inset: 0;
+background:
+radial-gradient(ellipse 60% 40% at 20% 20%, rgba(124,92,252,0.12) 0%, transparent 70%),
+radial-gradient(ellipse 50% 50% at 80% 80%, rgba(252,92,125,0.08) 0%, transparent 70%);
+pointer-events: none;
+z-index: 0;
+}
+
+.grain {
+position: fixed;
+inset: 0;
+background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+pointer-events: none;
+z-index: 0;
+opacity: 0.5;
+}
+
+.container {
+position: relative;
+z-index: 1;
+max-width: 1100px;
+margin: 0 auto;
+padding: 2rem;
+}
+
+header {
+text-align: center;
+padding: 3rem 0 2.5rem;
+}
+
+.logo {
+font-family: 'Syne', sans-serif;
+font-weight: 800;
+font-size: clamp(2.5rem, 6vw, 4.5rem);
+letter-spacing: -0.03em;
+background: linear-gradient(135deg, var(--accent), var(--accent2));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+line-height: 1;
+margin-bottom: 0.5rem;
+}
+
+.tagline {
+color: var(--muted);
+font-size: 0.85rem;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+}
+
+.mode-tabs {
+display: flex;
+gap: 0.5rem;
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: 12px;
+padding: 0.4rem;
+margin: 2rem auto;
+max-width: 360px;
+}
+
+.tab-btn {
+flex: 1;
+padding: 0.7rem 1.2rem;
+border: none;
+border-radius: 8px;
+background: transparent;
+color: var(--muted);
+font-family: 'DM Mono', monospace;
+font-size: 0.8rem;
+font-weight: 500;
+cursor: pointer;
+letter-spacing: 0.05em;
+transition: all 0.2s;
+}
+
+.tab-btn.active {
+background: linear-gradient(135deg, var(--accent), var(--accent2));
+color: white;
+}
+
+.swap-grid {
+display: grid;
+grid-template-columns: 1fr auto 1fr;
+gap: 1.5rem;
+align-items: center;
+margin-bottom: 2rem;
+}
+
+.swap-arrow {
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 0.5rem;
+color: var(--muted);
+font-size: 0.7rem;
+letter-spacing: 0.1em;
+}
+
+.swap-arrow svg {
+width: 32px;
+height: 32px;
+stroke: var(--accent);
+animation: pulse-arrow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-arrow {
+0%, 100% { opacity: 0.5; transform: scale(1); }
+50% { opacity: 1; transform: scale(1.1); }
+}
+
+.upload-zone {
+background: var(--surface);
+border: 2px dashed var(--border);
+border-radius: 16px;
+padding: 2rem;
+cursor: pointer;
+transition: all 0.3s;
+position: relative;
+overflow: hidden;
+min-height: 220px;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 0.8rem;
+}
+
+.upload-zone:hover, .upload-zone.dragover {
+border-color: var(--accent);
+background: rgba(124,92,252,0.05);
+}
+
+.upload-zone input[type="file"] {
+position: absolute;
+inset: 0;
+opacity: 0;
+cursor: pointer;
+width: 100%;
+height: 100%;
+z-index: 10;
+}
+
+.upload-label {
+font-family: 'Syne', sans-serif;
+font-weight: 700;
+font-size: 0.75rem;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+color: var(--muted);
+margin-bottom: 0.5rem;
+}
+
+.upload-icon {
+width: 48px;
+height: 48px;
+stroke: var(--accent);
+stroke-width: 1.5;
+fill: none;
+}
+
+.upload-text {
+font-size: 0.8rem;
+color: var(--muted);
+text-align: center;
+line-height: 1.5;
+}
+
+.upload-preview {
+position: absolute;
+inset: 0;
+background-size: cover;
+background-position: center;
+border-radius: 14px;
+z-index: 1;
+pointer-events: none;
+}
+
+.upload-preview video {
+width: 100%;
+height: 100%;
+object-fit: cover;
+display: block;
+}
+
+.upload-meta {
+position: absolute;
+left: 1rem;
+right: 1rem;
+bottom: 1rem;
+padding: 0.85rem 1rem;
+background: rgba(10, 10, 15, 0.75);
+border-radius: 14px;
+z-index: 2;
+color: var(--text);
+font-size: 0.8rem;
+line-height: 1.4;
+pointer-events: none;
+display: grid;
+gap: 0.35rem;
+text-align: left;
+}
+
+.upload-meta .meta-label {
+color: var(--muted);
+font-weight: 600;
+}
+
+.upload-preview-overlay {
+position: absolute;
+inset: 0;
+background: rgba(10,10,15,0.5);
+display: flex;
+align-items: center;
+justify-content: center;
+border-radius: 14px;
+opacity: 0;
+transition: opacity 0.2s;
+}
+
+.upload-zone:hover .upload-preview-overlay { opacity: 1; }
+
+.upload-preview-overlay span {
+font-size: 0.75rem;
+letter-spacing: 0.1em;
+color: white;
+text-transform: uppercase;
+}
+
+.swap-btn-wrap { text-align: center; }
+
+.swap-btn {
+font-family: 'Syne', sans-serif;
+font-weight: 700;
+font-size: 1rem;
+letter-spacing: 0.05em;
+padding: 1rem 3rem;
+border: none;
+border-radius: 12px;
+background: linear-gradient(135deg, var(--accent), var(--accent2));
+color: white;
+cursor: pointer;
+transition: all 0.3s;
+position: relative;
+overflow: hidden;
+}
+
+.swap-btn:hover:not(:disabled) {
+transform: translateY(-2px);
+box-shadow: 0 12px 32px rgba(124,92,252,0.4);
+}
+
+.swap-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.swap-btn::after {
+content: '';
+position: absolute;
+inset: 0;
+background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+opacity: 0;
+transition: opacity 0.2s;
+}
+
+.swap-btn:hover::after { opacity: 1; }
+
+.result-panel {
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: 16px;
+padding: 2rem;
+margin-top: 2rem;
+display: none;
+}
+
+.result-panel.visible { display: block; }
+
+.result-grid {
+display: grid;
+grid-template-columns: 1fr 1fr;
+gap: 1.5rem;
+margin-bottom: 1.5rem;
+}
+
+.result-card {
+background: var(--surface2);
+border: 1px solid var(--border);
+border-radius: 16px;
+padding: 1.3rem;
+}
+
+.result-subtitle {
+color: var(--muted);
+font-size: 0.85rem;
+margin-bottom: 1rem;
+}
+
+.result-label {
+font-family: 'Syne', sans-serif;
+font-weight: 700;
+font-size: 0.75rem;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+color: var(--muted);
+margin-bottom: 1.2rem;
+}
+
+.result-img { width: 100%; border-radius: 12px; display: block; }
+.result-video { width: 100%; border-radius: 12px; display: block; }
+
+.download-btn {
+display: inline-flex;
+align-items: center;
+gap: 0.5rem;
+margin-top: 1.2rem;
+font-family: 'DM Mono', monospace;
+font-size: 0.8rem;
+letter-spacing: 0.05em;
+padding: 0.7rem 1.5rem;
+background: var(--surface2);
+border: 1px solid var(--border);
+border-radius: 8px;
+color: var(--text);
+cursor: pointer;
+text-decoration: none;
+transition: all 0.2s;
+}
+
+.download-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Progress / Loading overlay ── */
+.loading-overlay {
+display: none;
+position: fixed;
+inset: 0;
+background: rgba(10,10,15,0.88);
+z-index: 100;
+align-items: center;
+justify-content: center;
+flex-direction: column;
+gap: 1.5rem;
+backdrop-filter: blur(4px);
+}
+
+.loading-overlay.visible { display: flex; }
+
+.spinner {
+width: 52px;
+height: 52px;
+border: 3px solid var(--border);
+border-top-color: var(--accent);
+border-radius: 50%;
+animation: spin 0.8s linear infinite;
+transition: opacity 0.4s;
+}
+
+.spinner.hidden { opacity: 0; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Progress bar block */
+.progress-block {
+width: 100%;
+max-width: 360px;
+}
+
+.progress-header {
+display: flex;
+justify-content: space-between;
+align-items: baseline;
+margin-bottom: 6px;
+}
+
+.loading-text {
+font-family: 'Syne', sans-serif;
+font-weight: 700;
+font-size: 0.95rem;
+color: var(--text);
+letter-spacing: 0.03em;
+}
+
+.loading-pct {
+font-family: 'DM Mono', monospace;
+font-size: 0.85rem;
+color: var(--accent);
+min-width: 36px;
+text-align: right;
+}
+
+.progress-track {
+width: 100%;
+height: 6px;
+background: var(--border);
+border-radius: 999px;
+overflow: hidden;
+}
+
+.progress-bar {
+height: 100%;
+width: 0%;
+border-radius: 999px;
+background: linear-gradient(90deg, var(--accent), var(--accent2));
+transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.loading-sub {
+font-size: 0.72rem;
+color: var(--muted);
+letter-spacing: 0.1em;
+margin-top: 8px;
+}
+
+/* Stage dots */
+.stage-dots {
+display: flex;
+gap: 6px;
+margin-top: 12px;
+}
+
+.sdot {
+flex: 1;
+height: 3px;
+border-radius: 999px;
+background: var(--border);
+transition: background 0.4s;
+}
+
+.sdot.done { background: var(--accent); }
+
+.sdot.active {
+background: linear-gradient(90deg, var(--accent), var(--accent2));
+animation: pulse-dot 1s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-dot { from { opacity: 0.5; } to { opacity: 1; } }
+
+/* Toast */
+.toast {
+position: fixed;
+bottom: 2rem;
+left: 50%;
+transform: translateX(-50%) translateY(100px);
+background: var(--surface2);
+border: 1px solid var(--border);
+border-radius: 10px;
+padding: 0.8rem 1.5rem;
+font-size: 0.8rem;
+color: var(--text);
+z-index: 200;
+transition: transform 0.3s;
+white-space: nowrap;
+}
+
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.error { border-color: var(--error); color: var(--error); }
+.toast.success { border-color: var(--success); color: var(--success); }
+
+.instructions {
+background: var(--surface);
+border: 1px solid var(--border);
+border-radius: 16px;
+padding: 1.8rem;
+margin-top: 3rem;
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 1.5rem;
+}
+
+.step { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.step-num {
+font-family: 'Syne', sans-serif;
+font-weight: 800;
+font-size: 2rem;
+background: linear-gradient(135deg, var(--accent), var(--accent2));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+line-height: 1;
+}
+
+.step-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--text); }
+.step-desc { font-size: 0.75rem; color: var(--muted); line-height: 1.6; }
+
+@media (max-width: 640px) {
+.swap-grid { grid-template-columns: 1fr; }
+.swap-arrow { transform: rotate(90deg); }
+.instructions { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+
+<div class="container">
+<header>
+<div class="logo">FaceSwap</div>
+<div class="tagline">Studio — AI-Powered Face Replacement</div>
+</header>
+
+<div class="mode-tabs">
+<button class="tab-btn active" id="tab-image" onclick="setMode('image')">📷 Image</button>
+<button class="tab-btn" id="tab-video" onclick="setMode('video')">🎬 Video</button>
+</div>
+
+<div class="mode-tabs" style="margin-top:1rem;">
+<button class="tab-btn active" id="tab-quality" onclick="setQuality('quality')">💎 Quality</button>
+<button class="tab-btn" id="tab-fast" onclick="setQuality('fast')">🚀 Fast</button>
+</div>
+<div style="text-align:center; margin-top:0.75rem; color: var(--muted); font-size:0.8rem;">
+Quality mode preserves the original video speed and resolution. Fast mode prioritizes speed.
+</div>
+
+<div class="swap-grid">
+<div>
+<div class="upload-label">Source Face</div>
+<div class="upload-zone" id="source-zone">
+<input type="file" id="source-input" accept="image/*,video/*" onchange="previewFile('source', this)">
+<svg class="upload-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+</svg>
+<div class="upload-text">Drop your <strong style="color:var(--text)">source face</strong> here<br/>or click to browse</div>
+<div class="upload-meta" id="source-meta" style="display:none;">
+<div><span class="meta-label">Video length:</span> <span id="source-video-duration">00:00</span></div>
+<div><span class="meta-label">Est. transfer:</span> <span id="source-video-download">—</span></div>
+</div>
+</div>
+</div>
+
+<div class="swap-arrow">
+<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<path d="M5 12h14M12 5l7 7-7 7"/>
+</svg>
+<span>SWAP</span>
+</div>
+
+<div>
+<div class="upload-label" id="target-label">Target Image</div>
+<div class="upload-zone" id="target-zone">
+<input type="file" id="target-input" accept="image/*" onchange="previewFile('target', this)">
+<svg class="upload-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>
+</svg>
+<div class="upload-text">Drop your <strong style="color:var(--text)">target</strong> here<br/>or click to browse</div>
+<div class="upload-meta" id="target-meta" style="display:none;">
+<div><span class="meta-label">Video length:</span> <span id="target-video-duration">00:00</span></div>
+<div><span class="meta-label">Est. transfer:</span> <span id="target-video-download">—</span></div>
+<div><span class="meta-label">Est. processing:</span> <span id="target-video-processing">—</span></div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="swap-btn-wrap">
+<button class="swap-btn" id="swap-btn" onclick="doSwap()" disabled>
+✦ Swap Faces
+</button>
+</div>
+
+<div class="result-panel" id="result-panel">
+<div class="result-grid">
+<div class="result-card">
+<div class="result-label">Target Preview</div>
+<div class="result-subtitle">What is being swapped</div>
+<img class="result-img" id="target-preview-img" style="display:none" alt="Target preview"/>
+<video class="result-video" id="target-preview-video" controls style="display:none"></video>
+</div>
+<div class="result-card">
+<div class="result-label">Compressed Video / Final Result</div>
+<div class="result-subtitle">Preview your finished swapped video here </div>
+<img class="result-img" id="result-img" style="display:none" alt="Swapped result"/>
+<video class="result-video" id="result-video" controls style="display:none"></video>
+</div>
+</div>
+<a class="download-btn" id="download-btn" href="#" download="faceswap_result">
+↓ Download Result
+</a>
+</div>
+
+<div class="instructions">
+<div class="step">
+<div class="step-num">01</div>
+<div class="step-title">Upload Source Face</div>
+<div class="step-desc">Upload a clear photo or short video of the face you want to use. Front-facing, well-lit media works best.</div>
+</div>
+<div class="step">
+<div class="step-num">02</div>
+<div class="step-title">Upload Target</div>
+<div class="step-desc">Upload the image or video where you want the face replaced. Supports JPG, PNG, and MP4.</div>
+</div>
+<div class="step">
+<div class="step-num">03</div>
+<div class="step-title">Download Result</div>
+<div class="step-desc">Hit swap and download your result. Video processing may take a few minutes.</div>
+</div>
+</div>
+</div>
+
+<!-- Loading overlay with progress bar -->
+<div class="loading-overlay" id="loading">
+<div class="spinner" id="spinner"></div>
+<div class="progress-block">
+<div class="progress-header">
+<div class="loading-text" id="loading-text">Processing...</div>
+<div class="loading-pct" id="loading-pct">0%</div>
+</div>
+<div class="progress-track">
+<div class="progress-bar" id="progress-bar"></div>
+</div>
+<div class="loading-sub" id="loading-sub">This may take a moment</div>
+<div class="stage-dots" id="stage-dots">
+<div class="sdot active"></div>
+<div class="sdot"></div>
+<div class="sdot"></div>
+<div class="sdot"></div>
+<div class="sdot"></div>
+</div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let mode = 'image';
+let qualityMode = 'quality';
+let sourceFile = null;
+let targetFile = null;
+let targetPreviewURL = null;
+let targetPreviewType = 'image';
+
+// ── Stage definitions ──────────────────────────────────────────────────────
+const IMAGE_STAGES = [
+{ pct: 5, title: 'Uploading files...', sub: 'Sending to server', stage: 0 },
+{ pct: 25, title: 'Analyzing faces...', sub: 'Detecting facial landmarks', stage: 1 },
+{ pct: 50, title: 'Aligning geometry...', sub: 'Mapping facial mesh', stage: 2 },
+{ pct: 75, title: 'Swapping faces...', sub: 'AI inference running', stage: 3 },
+{ pct: 90, title: 'Blending result...', sub: 'Seamless boundary merge', stage: 4 },
+];
+
+const VIDEO_STAGES = [
+{ pct: 5, title: 'Uploading video...', sub: 'Sending to server', stage: 0 },
+{ pct: 15, title: 'Analyzing faces...', sub: 'Detecting facial landmarks', stage: 1 },
+{ pct: 30, title: 'Processing frames...', sub: 'Frame-by-frame inference', stage: 2 },
+{ pct: 70, title: 'Blending frames...', sub: 'Seamless boundary merge', stage: 3 },
+{ pct: 88, title: 'Encoding video...', sub: 'Compressing output', stage: 4 },
+];
+
+// ── Progress helpers ───────────────────────────────────────────────────────
+function setProgress(pct, title, sub, stageIdx) {
+document.getElementById('progress-bar').style.width = Math.round(pct) + '%';
+document.getElementById('loading-pct').textContent = Math.round(pct) + '%';
+document.getElementById('loading-text').textContent = title;
+document.getElementById('loading-sub').textContent = sub;
+const dots = document.querySelectorAll('.sdot');
+dots.forEach((d, i) => {
+d.className = 'sdot' + (i < stageIdx ? ' done' : i === stageIdx ? ' active' : '');
+});
+}
+
+function resetProgress() {
+setProgress(0, 'Processing...', 'This may take a moment', 0);
+document.getElementById('spinner').classList.remove('hidden');
+}
+
+// Animate through canned stages until the real response comes back
+function startStageAnimation(stages) {
+let i = 0;
+const iv = setInterval(() => {
+if (i >= stages.length) { clearInterval(iv); return; }
+const s = stages[i++];
+setProgress(s.pct, s.title, s.sub, s.stage);
+}, mode === 'video' ? 1800 : 700);
+return iv; // caller can clearInterval if SSE takes over
+}
+
+// ── SSE progress (used when backend sends X-Job-Id header) ────────────────
+function pollProgress(jobId) {
+return new Promise((resolve) => {
+const es = new EventSource('/swap/progress/' + jobId);
+es.onmessage = (e) => {
+const d = JSON.parse(e.data);
+setProgress(d.pct, d.title, d.sub, d.stage ?? 2);
+if (d.done) { es.close(); resolve(); }
+};
+es.onerror = () => { es.close(); resolve(); };
+});
+}
+
+// ── Main swap function ─────────────────────────────────────────────────────
+async function doSwap() {
+if (!sourceFile || !targetFile) return;
+
+const endpoint = mode === 'video' ? '/swap/video' : '/swap/image';
+const form = new FormData();
+form.append('source', sourceFile);
+form.append('target', targetFile);
+form.append('quality', qualityMode);
+
+document.getElementById('loading').classList.add('visible');
+resetProgress();
+
+const stages = mode === 'video' ? VIDEO_STAGES : IMAGE_STAGES;
+const animTimer = startStageAnimation(stages);
+
+try {
+const res = await fetch(endpoint, { method: 'POST', body: form });
+
+if (!res.ok) {
+const err = await res.json();
+throw new Error(err.error || 'Swap failed');
+}
+
+// If the backend sends a job ID, switch to SSE-based progress
+const jobId = res.headers.get('X-Job-Id');
+if (jobId) {
+clearInterval(animTimer);
+await pollProgress(jobId);
+}
+
+const blob = await res.blob();
+const url = URL.createObjectURL(blob);
+
+const panel = document.getElementById('result-panel');
+const resultImg = document.getElementById('result-img');
+const resultVideo = document.getElementById('result-video');
+const downloadBtn = document.getElementById('download-btn');
+
+clearInterval(animTimer);
+setProgress(100, 'Done!', 'Preparing download', 5);
+document.getElementById('spinner').classList.add('hidden');
+
+panel.classList.add('visible');
+
+const targetPreviewImg = document.getElementById('target-preview-img');
+const targetPreviewVideo = document.getElementById('target-preview-video');
+
+if (targetPreviewURL && targetPreviewType === 'video') {
+targetPreviewImg.style.display = 'none';
+targetPreviewVideo.style.display = 'block';
+targetPreviewVideo.src = targetPreviewURL;
+} else if (targetPreviewURL) {
+targetPreviewVideo.style.display = 'none';
+targetPreviewImg.style.display = 'block';
+targetPreviewImg.src = targetPreviewURL;
+} else {
+targetPreviewVideo.style.display = 'none';
+targetPreviewImg.style.display = 'none';
+}
+
+if (mode === 'video') {
+resultImg.style.display = 'none';
+resultVideo.style.display = 'block';
+resultVideo.src = url;
+downloadBtn.href = url;
+downloadBtn.download = 'faceswap_result.mp4';
+} else {
+resultVideo.style.display = 'none';
+resultImg.style.display = 'block';
+resultImg.src = url;
+downloadBtn.href = url;
+downloadBtn.download = 'faceswap_result.jpg';
+}
+
+setTimeout(() => {
+panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+showToast('Face swap complete!', 'success');
+}, 400);
+
+} catch (err) {
+clearInterval(animTimer);
+showToast(err.message, 'error');
+} finally {
+setTimeout(() => {
+document.getElementById('loading').classList.remove('visible');
+resetProgress();
+}, 900);
+document.getElementById('source-input').value = '';
+document.getElementById('target-input').value = '';
+}
+}
+
+// ── Mode toggle ────────────────────────────────────────────────────────────
+function setMode(m) {
+mode = m;
+document.getElementById('tab-image').classList.toggle('active', m === 'image');
+document.getElementById('tab-video').classList.toggle('active', m === 'video');
+const targetInput = document.getElementById('target-input');
+const targetLabel = document.getElementById('target-label');
+if (m === 'video') {
+targetInput.accept = 'video/*';
+targetLabel.textContent = 'Target Video';
+} else {
+targetInput.accept = 'image/*';
+targetLabel.textContent = 'Target Image';
+}
+targetFile = null;
+clearPreview('target');
+hideVideoMeta();
+checkReady();
+}
+
+function setQuality(q) {
+qualityMode = q;
+document.getElementById('tab-quality').classList.toggle('active', q === 'quality');
+document.getElementById('tab-fast').classList.toggle('active', q === 'fast');
+}
+
+// ── File preview ───────────────────────────────────────────────────────────
+const DOWNLOAD_SPEED = 5 * 1024 * 1024;
+
+async function previewFile(which, input) {
+const file = input.files[0];
+if (!file) return;
+if (which === 'source') sourceFile = file;
+else {
+targetFile = file;
+targetPreviewURL = URL.createObjectURL(file);
+targetPreviewType = file.type.startsWith('video/') ? 'video' : 'image';
+}
+
+const zone = document.getElementById(which + '-zone');
+const url = which === 'target' ? targetPreviewURL : URL.createObjectURL(file);
+const old = zone.querySelector('.upload-preview');
+if (old) old.remove();
+
+if (file.type.startsWith('image/')) {
+const preview = document.createElement('div');
+preview.className = 'upload-preview';
+preview.style.backgroundImage = `url(${url})`;
+const overlay = document.createElement('div');
+overlay.className = 'upload-preview-overlay';
+overlay.innerHTML = '<span>Change</span>';
+preview.appendChild(overlay);
+zone.appendChild(preview);
+hideVideoMeta();
+} else if (file.type.startsWith('video/')) {
+const wrapper = document.createElement('div');
+wrapper.className = 'upload-preview';
+wrapper.style.overflow = 'hidden';
+
+const preview = document.createElement('video');
+preview.src = url;
+preview.muted = true;
+preview.loop = true;
+preview.autoplay = true;
+preview.playsInline = true;
+preview.style.width = '100%';
+preview.style.height = '100%';
+preview.style.objectFit = 'cover';
+wrapper.appendChild(preview);
+
+const overlay = document.createElement('div');
+overlay.className = 'upload-preview-overlay';
+overlay.innerHTML = '<span>Change</span>';
+wrapper.appendChild(overlay);
+
+zone.appendChild(wrapper);
+await updateVideoMetadata(file, which);
+} else {
+const preview = document.createElement('div');
+preview.className = 'upload-preview';
+Object.assign(preview.style, {
+background: 'var(--surface2)', display: 'flex',
+alignItems: 'center', justifyContent: 'center',
+flexDirection: 'column', gap: '0.5rem'
+});
+preview.innerHTML = `<div style="font-size:2rem">🎬</div><div style="font-size:0.75rem;color:var(--muted);text-align:center;padding:0 1rem">${file.name}</div>`;
+zone.appendChild(preview);
+hideVideoMeta();
+}
+checkReady();
+}
+
+function clearPreview(which) {
+const zone = document.getElementById(which + '-zone');
+const old = zone.querySelector('.upload-preview');
+if (old) old.remove();
+}
+
+function updateVideoMetadata(file, which) {
+return getVideoDuration(file).then(duration => {
+const durationText = duration ? formatTime(duration) : 'Unknown';
+document.getElementById(`${which}-video-duration`).textContent = durationText;
+document.getElementById(`${which}-video-download`).textContent = estimateDownloadTime(file.size);
+if (which === 'target') {
+document.getElementById('target-video-processing').textContent = duration ? estimateProcessingTime(duration) : 'Unknown';
+}
+document.getElementById(`${which}-meta`).style.display = 'grid';
+});
+}
+
+function hideVideoMeta() {
+document.querySelectorAll('.upload-meta').forEach(meta => {
+meta.style.display = 'none';
+});
+}
+
+function estimateProcessingTime(duration) {
+const frameRate = 30;
+const frames = Math.max(1, Math.round(duration * frameRate));
+const minSeconds = frames * 0.05;
+const maxSeconds = frames * 0.15;
+return `${formatTime(minSeconds)} - ${formatTime(maxSeconds)}`;
+}
+
+function formatTime(seconds) {
+if (!seconds || Number.isNaN(seconds)) return '00:00';
+const minutes = Math.floor(seconds / 60);
+const secs = Math.round(seconds % 60);
+return `${minutes}:${secs.toString().padStart(2, '0')}`;
+}
+
+function estimateDownloadTime(bytes) {
+const seconds = bytes / DOWNLOAD_SPEED;
+if (seconds < 1) return '<1 sec';
+return `${Math.round(seconds)} sec`;
+}
+
+function getVideoDuration(file) {
+return new Promise(resolve => {
+const video = document.createElement('video');
+video.preload = 'metadata';
+video.src = URL.createObjectURL(file);
+video.onloadedmetadata = () => {
+resolve(video.duration);
+URL.revokeObjectURL(video.src);
+};
+video.onerror = () => resolve(0);
+});
+}
+
+function checkReady() {
+document.getElementById('swap-btn').disabled = !(sourceFile && targetFile);
+}
+
+// ── Toast ──────────────────────────────────────────────────────────────────
+function showToast(msg, type = '') {
+const toast = document.getElementById('toast');
+toast.textContent = msg;
+toast.className = 'toast show ' + type;
+setTimeout(() => toast.className = 'toast', 3000);
+}
+
+// ── Drag & drop ────────────────────────────────────────────────────────────
+['source-zone', 'target-zone'].forEach(id => {
+const zone = document.getElementById(id);
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+zone.addEventListener('drop', e => {
+e.preventDefault();
+zone.classList.remove('dragover');
+const file = e.dataTransfer.files[0];
+if (!file) return;
+const which = id.replace('-zone', '');
+const input = document.getElementById(which + '-input');
+const dt = new DataTransfer();
+dt.items.add(file);
+input.files = dt.files;
+previewFile(which, input);
+});
+});
+</script>
+</body>
+</html>
