@@ -1,3 +1,10 @@
-*.onnx
-*.pth
+.venv/
 __pycache__/
+*.pyc
+*.onnx
+*.mp4
+*.mov
+*.avi
+*.jpg
+*.jpeg
+*.png
